@@ -1,0 +1,8 @@
+[
+  {"id":"c1","code":"1","name":"Activo","parentId":null,"nature":"activo"},
+  {"id":"c2","code":"1.1","name":"Disponibilidades","parentId":"c1","nature":"activo"},
+  {"id":"c3","code":"1.1.1","name":"Banco","parentId":"c2","nature":"activo"},
+  {"id":"c4","code":"1.1.1.01","name":"Banco de Corrientes Cuenta Corriente","parentId":"c3","nature":"activo"},
+  {"id":"c5","code":"2","name":"Pasivo","parentId":null,"nature":"pasivo"},
+  {"id":"c6","code":"3","name":"Patrimonio Neto","parentId":null,"nature":"patrimonio"}
+]

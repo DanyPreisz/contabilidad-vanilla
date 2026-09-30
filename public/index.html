@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plan de cuentas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <p class="kicker">Contabilidad</p>
+        <h1>Plan de cuentas</h1>
+      </div>
+      <span id="store" class="pill">…</span>
+    </header>
+    <div class="layout">
+      <section class="tree-card">
+        <div class="toolbar">
+          <input id="q" placeholder="Buscar cuenta" />
+          <button type="button" id="root-btn">+ Rubro</button>
+        </div>
+        <ul id="tree"></ul>
+      </section>
+      <section class="form-card">
+        <h2 id="form-title">Nueva cuenta</h2>
+        <p id="parent-label" class="muted">Raíz del plan</p>
+        <form id="form">
+          <label>Código<input id="code" placeholder="1.1.1.01" /></label>
+          <label>Nombre<input id="name" required placeholder="Banco de Corrientes Cuenta Corriente" /></label>
+          <label>Naturaleza
+            <select id="nature">
+              <option value="activo">Activo</option>
+              <option value="pasivo">Pasivo</option>
+              <option value="patrimonio">Patrimonio Neto</option>
+              <option value="resultado">Resultado</option>
+              <option value="orden">Orden</option>
+            </select>
+          </label>
+          <div class="actions">
+            <button type="submit" id="save">Guardar</button>
+            <button type="button" id="cancel" class="ghost">Cancelar</button>
+            <button type="button" id="delete" class="danger" hidden>Eliminar</button>
+          </div>
+          <p id="msg" class="msg" hidden></p>
+        </form>
+      </section>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
