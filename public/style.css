@@ -42,7 +42,8 @@ h1, h2 { font-family: Fraunces, Georgia, serif; }
   border-radius: 16px;
   padding: 16px;
 }
-.toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
+.toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+.hint { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
 input, select, button {
   height: 38px;
   font: inherit;

@@ -9,14 +9,14 @@ const deleteBtn = document.querySelector("#delete");
 const msg = document.querySelector("#msg");
 const q = document.querySelector("#q");
 const storeEl = document.querySelector("#store");
+const saveBtn = document.querySelector("#save");
 
 let accounts = [];
-let mode = "create";
+let mode = "idle";
 let parentId = null;
 let editingId = null;
 
-document.querySelector("#root-btn").addEventListener("click", () => startCreate(null));
-document.querySelector("#cancel").addEventListener("click", () => startCreate(null));
+document.querySelector("#cancel").addEventListener("click", idle);
 q.addEventListener("input", paint);
 form.addEventListener("submit", save);
 deleteBtn.addEventListener("click", removeAcc);
@@ -55,7 +55,7 @@ function renderNode(acc, query) {
     <div class="row ${on}" data-id="${acc.id}">
       <span></span>
       <span><span class="code">${escapeHtml(acc.code)}</span>${escapeHtml(acc.name)}</span>
-      <button type="button" class="add" data-add="${acc.id}">+ hija</button>
+      <button type="button" class="add" data-add="${acc.id}">+ subcuenta</button>
     </div>
     ${kids.length ? `<ul class="kids">${kids.map((c) => renderNode(c, query)).join("")}</ul>` : ""}
   </li>`;
@@ -67,17 +67,34 @@ function paint() {
   treeEl.innerHTML = roots.map((a) => renderNode(a, query)).join("") || "<li class='muted'>Sin cuentas</li>";
 }
 
+function idle() {
+  mode = "idle";
+  parentId = null;
+  editingId = null;
+  formTitle.textContent = "Nueva subcuenta";
+  parentLabel.textContent = "Elegí una cuenta y tocá + subcuenta";
+  codeEl.value = "";
+  nameEl.value = "";
+  natureEl.value = "activo";
+  deleteBtn.hidden = true;
+  saveBtn.disabled = true;
+  msg.hidden = true;
+  paint();
+}
+
 function startCreate(pid) {
+  const parent = accounts.find((a) => a.id === pid);
+  if (!parent) return idle();
   mode = "create";
   parentId = pid;
   editingId = null;
-  const parent = accounts.find((a) => a.id === pid);
-  formTitle.textContent = parent ? "Cuenta hija" : "Nuevo rubro";
-  parentLabel.textContent = parent ? `Dentro de ${parent.code} ${parent.name}` : "Raíz del plan";
+  formTitle.textContent = "Nueva subcuenta";
+  parentLabel.textContent = `Dentro de ${parent.code} ${parent.name}`;
   codeEl.value = suggestCode(pid);
   nameEl.value = "";
-  natureEl.value = parent ? parent.nature : "activo";
+  natureEl.value = parent.nature;
   deleteBtn.hidden = true;
+  saveBtn.disabled = false;
   msg.hidden = true;
   paint();
   nameEl.focus();
@@ -89,28 +106,42 @@ function startEdit(id) {
   mode = "edit";
   editingId = id;
   parentId = acc.parentId;
-  formTitle.textContent = "Editar cuenta";
+  formTitle.textContent = acc.parentId ? "Editar subcuenta" : "Capítulo / rubro";
   parentLabel.textContent = acc.parentId
     ? `Hija de ${accounts.find((a) => a.id === acc.parentId)?.name || ""}`
-    : "Rubro de raíz";
+    : "Estructura FACPCE (no se crean rubros nuevos)";
   codeEl.value = acc.code;
   nameEl.value = acc.name;
   natureEl.value = acc.nature;
-  deleteBtn.hidden = false;
+  deleteBtn.hidden = Boolean(childrenOf(id).length);
+  saveBtn.disabled = false;
   msg.hidden = true;
   paint();
 }
 
 function suggestCode(pid) {
-  const siblings = childrenOf(pid);
-  if (!pid) return String(siblings.length + 1);
   const parent = accounts.find((a) => a.id === pid);
-  const base = parent?.code || "1";
-  return `${base}.${siblings.length + 1}`;
+  const base = parent?.code || "";
+  const siblings = childrenOf(pid);
+  let max = 0;
+  let width = 2;
+  for (const s of siblings) {
+    const rest = base && String(s.code).startsWith(base + ".") ? String(s.code).slice(base.length + 1) : String(s.code);
+    const first = rest.split(".")[0];
+    const n = parseInt(first, 10);
+    if (!Number.isNaN(n) && n > max) max = n;
+    if (first && /^\d+$/.test(first) && first.length > width) width = first.length;
+  }
+  return `${base}.${String(max + 1).padStart(width, "0")}`;
 }
 
 async function save(event) {
   event.preventDefault();
+  if (mode === "idle") return;
+  if (mode === "create" && !parentId) {
+    show("Elegí una cuenta padre.");
+    return;
+  }
   const payload = {
     code: codeEl.value.trim(),
     name: nameEl.value.trim(),
@@ -126,11 +157,13 @@ async function save(event) {
   });
   const data = await res.json();
   if (!res.ok) {
-    show(data.error === "hijos" ? "Tiene cuentas hijas." : "No se pudo guardar.");
+    show(data.error === "rubro" ? "No se pueden crear rubros." : data.error === "hijos" ? "Tiene cuentas hijas." : "No se pudo guardar.");
     return;
   }
+  const stay = mode === "create" ? parentId : data.parentId;
   await load();
-  startCreate(mode === "create" ? parentId : data.parentId);
+  if (stay) startCreate(stay);
+  else idle();
 }
 
 async function removeAcc() {
@@ -138,11 +171,11 @@ async function removeAcc() {
   const res = await fetch("/api/accounts/" + editingId, { method: "DELETE" });
   const data = await res.json();
   if (!res.ok) {
-    show(data.error === "hijos" ? "Borrá primero las cuentas hijas." : "No se pudo eliminar.");
+    show(data.error === "hijos" ? "Borrá primero las subcuentas." : "No se pudo eliminar.");
     return;
   }
   await load();
-  startCreate(null);
+  idle();
 }
 
 function show(text) {
@@ -154,7 +187,8 @@ async function load() {
   const health = await (await fetch("/health")).json();
   storeEl.textContent = health.store === "mongodb" ? "MongoDB" : "Local";
   accounts = await (await fetch("/api/accounts")).json();
+  accounts.sort((a, b) => String(a.code).localeCompare(String(b.code), "es", { numeric: true }));
   paint();
 }
 
-load().then(() => startCreate(null));
+load().then(idle);
