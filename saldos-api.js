@@ -72,14 +72,9 @@ function computeSaldos(accounts, opening, entries) {
       const normalDebit = debitNormal(acc);
       const signed = normalDebit ? net : -net;
       return {
-        id: acc.id,
-        code: acc.code,
-        name: acc.name,
-        nature: acc.nature,
-        inicialDebe: a.debit,
-        inicialHaber: a.credit,
-        movDebe: b.debit,
-        movHaber: b.credit,
+        id: acc.id, code: acc.code, name: acc.name, nature: acc.nature,
+        inicialDebe: a.debit, inicialHaber: a.credit,
+        movDebe: b.debit, movHaber: b.credit,
         saldo: Math.abs(signed),
         saldoLado: signed >= 0 ? (normalDebit ? "debe" : "haber") : normalDebit ? "haber" : "debe",
       };
@@ -87,4 +82,24 @@ function computeSaldos(accounts, opening, entries) {
   return { date: opening.date || "", leaves: leavesOf(accounts), rows };
 }
 
-module.exports = { getOpening, saveOpening, computeSaldos, emptyOpening };
+function cleanOpening(data, accounts) {
+  const date = String(data.date || "").slice(0, 10);
+  const raw = Array.isArray(data.lines) ? data.lines : [];
+  const ids = new Set(accounts.map((a) => a.id));
+  const lines = [];
+  for (const line of raw) {
+    const accountId = String(line.accountId || "");
+    const debit = Math.round(Number(line.debit || 0) * 100) / 100;
+    const credit = Math.round(Number(line.credit || 0) * 100) / 100;
+    if (!accountId && !debit && !credit) continue;
+    if (!ids.has(accountId)) return { error: "cuenta" };
+    if (debit < 0 || credit < 0) return { error: "importe" };
+    if (debit > 0 && credit > 0) return { error: "lado" };
+    if (debit === 0 && credit === 0) continue;
+    lines.push({ accountId, debit, credit });
+  }
+  if (!date) return { error: "datos" };
+  return { date, lines };
+}
+
+module.exports = { getOpening, saveOpening, computeSaldos, emptyOpening, cleanOpening };
