@@ -17,12 +17,8 @@ let lines = [];
 dateEl.value = new Date().toISOString().slice(0, 10);
 form.addEventListener("submit", save);
 document.querySelector("#add").addEventListener("click", addLine);
-debitEl.addEventListener("input", () => {
-  if (Number(debitEl.value) > 0) creditEl.value = "";
-});
-creditEl.addEventListener("input", () => {
-  if (Number(creditEl.value) > 0) debitEl.value = "";
-});
+debitEl.addEventListener("input", () => { if (Number(debitEl.value) > 0) creditEl.value = ""; });
+creditEl.addEventListener("input", () => { if (Number(creditEl.value) > 0) debitEl.value = ""; });
 rowsEl.addEventListener("click", (event) => {
   const btn = event.target.closest("[data-del]");
   if (!btn) return;
@@ -47,35 +43,19 @@ function label(acc) {
 }
 function leavesOf(rows) {
   const parents = new Set(rows.map((a) => a.parentId).filter(Boolean));
-  return rows
-    .filter((a) => !parents.has(a.id))
-    .sort((a, b) => String(a.code).localeCompare(String(b.code), "es", { numeric: true }));
+  return rows.filter((a) => !parents.has(a.id)).sort((a, b) => String(a.code).localeCompare(String(b.code), "es", { numeric: true }));
 }
 function paintSelect() {
-  accountEl.innerHTML =
-    `<option value="">Elegir subcuenta</option>` +
-    leaves.map((a) => `<option value="${a.id}">${escapeHtml(label(a))}</option>`).join("");
+  accountEl.innerHTML = `<option value="">Elegir subcuenta</option>` + leaves.map((a) => `<option value="${a.id}">${escapeHtml(label(a))}</option>`).join("");
 }
 function paintLines() {
-  if (!lines.length) {
-    rowsEl.innerHTML = "<tr><td colspan='4' class='muted'>Todavía no cargaste subcuentas.</td></tr>";
-  } else {
-    rowsEl.innerHTML = lines
-      .map((line, i) => {
-        const acc = byId(line.accountId);
-        return `<tr>
-          <td>${escapeHtml(label(acc) || line.accountId)}</td>
-          <td>${line.debit ? money(line.debit) : ""}</td>
-          <td>${line.credit ? money(line.credit) : ""}</td>
-          <td><button type="button" class="ghost" data-del="${i}">×</button></td>
-        </tr>`;
-      })
-      .join("");
-  }
+  rowsEl.innerHTML = lines.length
+    ? lines.map((line, i) => `<tr><td>${escapeHtml(label(byId(line.accountId)) || line.accountId)}</td><td>${line.debit ? money(line.debit) : ""}</td><td>${line.credit ? money(line.credit) : ""}</td><td><button type="button" class="ghost" data-del="${i}">×</button></td></tr>`).join("")
+    : "<tr><td colspan='4' class='muted'>Todavía no cargaste subcuentas.</td></tr>";
   const d = lines.reduce((s, l) => s + cents(l.debit), 0);
   const h = lines.reduce((s, l) => s + cents(l.credit), 0);
-  totales.className = "totales " + (d === h ? "ok" : "bad");
-  totales.textContent = `Debe ${money(d / 100)} · Haber ${money(h / 100)} · Dif. ${money((d - h) / 100)}`;
+  totales.className = "totales";
+  totales.textContent = `Debe ${money(d / 100)} · Haber ${money(h / 100)}`;
 }
 function addLine() {
   msg.hidden = true;
@@ -86,18 +66,12 @@ function addLine() {
   if ((debit > 0 && credit > 0) || (debit <= 0 && credit <= 0)) return show("Cargá debe o haber, no los dos.");
   const i = lines.findIndex((l) => l.accountId === accountId);
   const next = { accountId, debit: debit || 0, credit: credit || 0 };
-  if (i >= 0) lines[i] = next;
-  else lines.push(next);
-  accountEl.value = "";
-  debitEl.value = "";
-  creditEl.value = "";
+  if (i >= 0) lines[i] = next; else lines.push(next);
+  accountEl.value = ""; debitEl.value = ""; creditEl.value = "";
   paintLines();
   accountEl.focus();
 }
-function show(text) {
-  msg.hidden = false;
-  msg.textContent = text;
-}
+function show(text) { msg.hidden = false; msg.textContent = text; }
 function debitNormal(acc) {
   if (!acc) return true;
   if (acc.nature === "activo") return true;
@@ -126,32 +100,15 @@ function computeLocal(opening, entries) {
     const net = a.debit + b.debit - a.credit - b.credit;
     const normal = debitNormal(acc);
     const signed = normal ? net : -net;
-    return {
-      id: acc.id, code: acc.code, name: acc.name,
-      inicialDebe: a.debit, inicialHaber: a.credit,
-      movDebe: b.debit, movHaber: b.credit,
-      saldo: Math.abs(signed),
-      saldoLado: signed >= 0 ? (normal ? "debe" : "haber") : normal ? "haber" : "debe",
-    };
+    return { id: acc.id, code: acc.code, name: acc.name, inicialDebe: a.debit, inicialHaber: a.credit, movDebe: b.debit, movHaber: b.credit, saldo: Math.abs(signed), saldoLado: signed >= 0 ? (normal ? "debe" : "haber") : normal ? "haber" : "debe" };
   });
 }
 function paintCurrent(rows, date) {
   asOf.textContent = date ? `Incluye asientos desde el ${date}` : "Todavía no hay fecha de saldos iniciales.";
   const visible = (rows || []).filter((r) => r.inicialDebe || r.inicialHaber || r.movDebe || r.movHaber || r.saldo);
-  if (!visible.length) {
-    currentEl.innerHTML = "<tr><td colspan='4' class='muted'>Sin movimientos ni saldos.</td></tr>";
-    return;
-  }
-  currentEl.innerHTML = visible.map((r) => {
-    const ini = r.inicialDebe ? `D ${money(r.inicialDebe)}` : r.inicialHaber ? `H ${money(r.inicialHaber)}` : "—";
-    const side = r.saldoLado === "haber" ? "H" : "D";
-    return `<tr>
-      <td><span class="code">${escapeHtml(r.code)}</span>${escapeHtml(r.name)}</td>
-      <td>${ini}</td>
-      <td>D ${money(r.movDebe)} / H ${money(r.movHaber)}</td>
-      <td>${side} ${money(r.saldo)}</td>
-    </tr>`;
-  }).join("");
+  currentEl.innerHTML = visible.length
+    ? visible.map((r) => `<tr><td><span class="code">${escapeHtml(r.code)}</span>${escapeHtml(r.name)}</td><td>${r.inicialDebe ? "D " + money(r.inicialDebe) : r.inicialHaber ? "H " + money(r.inicialHaber) : "—"}</td><td>D ${money(r.movDebe)} / H ${money(r.movHaber)}</td><td>${r.saldoLado === "haber" ? "H" : "D"} ${money(r.saldo)}</td></tr>`).join("")
+    : "<tr><td colspan='4' class='muted'>Sin movimientos ni saldos.</td></tr>";
 }
 async function save(event) {
   event.preventDefault();
@@ -161,12 +118,7 @@ async function save(event) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ date: dateEl.value, lines }),
   });
-  let data = {};
-  try { data = await res.json(); } catch {}
-  if (!res.ok) {
-    show(data.error === "balance" ? "El debe y el haber iniciales tienen que ser iguales." : "No se pudo guardar.");
-    return;
-  }
+  if (!res.ok) return show("No se pudo guardar.");
   await load();
 }
 async function jsonOr(url, fallback) {
@@ -174,9 +126,7 @@ async function jsonOr(url, fallback) {
     const res = await fetch(url);
     if (!res.ok) return fallback;
     return await res.json();
-  } catch {
-    return fallback;
-  }
+  } catch { return fallback; }
 }
 async function load() {
   const health = await jsonOr("/health", {});
@@ -186,11 +136,7 @@ async function load() {
   paintSelect();
   const opening = await jsonOr("/api/opening", { date: dateEl.value, lines: [] });
   if (opening.date) dateEl.value = opening.date;
-  lines = (opening.lines || []).map((l) => ({
-    accountId: l.accountId,
-    debit: Number(l.debit || 0),
-    credit: Number(l.credit || 0),
-  }));
+  lines = (opening.lines || []).map((l) => ({ accountId: l.accountId, debit: Number(l.debit || 0), credit: Number(l.credit || 0) }));
   paintLines();
   const saldos = await jsonOr("/api/saldos", null);
   const entries = await jsonOr("/api/entries", []);
