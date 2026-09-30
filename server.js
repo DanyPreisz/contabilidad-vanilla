@@ -52,7 +52,10 @@ async function store() {
 }
 
 function publicAcc(doc) {
-  return { id: doc.id, code: doc.code || "", name: doc.name, parentId: doc.parentId || null, nature: doc.nature || "activo" };
+  return {
+    id: doc.id, code: doc.code || "", name: doc.name, parentId: doc.parentId || null, nature: doc.nature || "activo",
+    representa: doc.representa || "", seDebita: doc.seDebita || "", seAcredita: doc.seAcredita || "",
+  };
 }
 function localRead() {
   try { if (fs.existsSync(LOCAL_DB)) return JSON.parse(fs.readFileSync(LOCAL_DB, "utf8")); } catch {}
@@ -129,7 +132,12 @@ function clean(data, rows, requireParent) {
   if (requireParent && !parentId) return { error: "rubro" };
   if (parentId && !rows.some((a) => a.id === parentId)) return { error: "padre" };
   if (!name) return { error: "nombre" };
-  return { name, code, parentId, nature };
+  return {
+    name, code, parentId, nature,
+    representa: String(data.representa || "").trim().slice(0, 400),
+    seDebita: String(data.seDebita || "").trim().slice(0, 400),
+    seAcredita: String(data.seAcredita || "").trim().slice(0, 400),
+  };
 }
 
 const server = http.createServer(async (req, res) => {
