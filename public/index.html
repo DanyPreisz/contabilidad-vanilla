@@ -20,6 +20,7 @@
         <a href="/asientos.html">Asientos</a>
         <a href="/saldos.html">Saldos</a>
         <a href="/esp.html">Situación patrimonial</a>
+        <a href="/manual.html">Manual de cuentas</a>
       </nav>
       <span id="store" class="pill">…</span>
     </header>
@@ -46,6 +47,10 @@
               <option value="orden">Orden</option>
             </select>
           </label>
+          <p class="muted">Manual de la cuenta</p>
+          <label>Qué representa el saldo<textarea id="representa" rows="2" placeholder="Disponibilidad en Banco de Corrientes."></textarea></label>
+          <label>Se debita cuando<textarea id="seDebita" rows="2" placeholder="Depósitos, cobros, transferencias recibidas."></textarea></label>
+          <label>Se acredita cuando<textarea id="seAcredita" rows="2" placeholder="Pagos, extracciones, transferencias emitidas."></textarea></label>
           <div class="actions">
             <button type="submit" id="save">Guardar</button>
             <button type="button" id="cancel" class="ghost">Cancelar</button>
