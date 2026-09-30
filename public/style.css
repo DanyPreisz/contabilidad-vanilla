@@ -32,16 +32,6 @@ h1, h2 { font-family: Fraunces, Georgia, serif; }
   color: var(--accent);
   font-size: 0.75rem;
 }
-.nav { display: flex; gap: 8px; margin-left: auto; margin-right: 8px; }
-.nav a {
-  color: var(--ink);
-  text-decoration: none;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  font-size: 0.85rem;
-}
-.nav a:hover, .nav a.on { border-color: var(--accent); color: var(--accent); }
 .layout {
   display: grid;
   grid-template-columns: 1.3fr 0.9fr;
@@ -104,6 +94,16 @@ label { display: grid; gap: 6px; margin: 10px 0; font-size: 0.85rem; color: var(
 .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .muted { color: var(--muted); font-size: 0.85rem; margin: 6px 0 10px; }
 .msg { margin-top: 10px; color: var(--accent); }
+.nav { display: flex; gap: 8px; margin-left: auto; margin-right: 8px; }
+.nav a {
+  color: var(--ink);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+.nav a:hover, .nav a.on { border-color: var(--accent); color: var(--accent); }
 .lines { width: 100%; border-collapse: collapse; margin: 12px 0; }
 .lines th, .lines td { border-bottom: 1px solid var(--line); padding: 6px; text-align: left; font-size: 0.85rem; }
 .lines input[type="number"] { width: 110px; }
@@ -111,7 +111,20 @@ label { display: grid; gap: 6px; margin: 10px 0; font-size: 0.85rem; color: var(
 .totales.ok { color: #8fd18f; }
 .totales.bad { color: var(--danger); }
 .entry { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 10px 0; }
-.entry header { padding: 0; display: flex; justify-content: space-between; }
+.esp-wrap { max-width: 920px; margin: 0 auto; padding: 0 24px 40px; }
+.esp-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+.esp { width: 100%; border-collapse: collapse; }
+.esp th, .esp td { padding: 7px 8px; font-size: 0.88rem; }
+.esp td.amt { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.esp .cap { font-family: Fraunces, Georgia, serif; font-size: 1.05rem; padding-top: 16px; color: var(--accent); }
+.esp .rubro { font-weight: 700; }
+.esp .sub { color: var(--muted); padding-left: 18px; }
+.esp .leaf { padding-left: 36px; color: var(--ink); }
+.esp .tot { border-top: 1px solid var(--line); font-weight: 700; }
+.esp .grand { border-top: 2px solid var(--accent); font-weight: 700; }
+.esp .eq.ok { color: #8fd18f; }
+.esp .eq.bad { color: var(--danger); }
+.esp-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 @media (max-width: 800px) {
   .layout { grid-template-columns: 1fr; }
 }
